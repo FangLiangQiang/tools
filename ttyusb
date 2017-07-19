@@ -5,6 +5,7 @@ SearchStr=$3
 
 sudo -s <<EOF #将EOF与 << 结合使用，表示后续的输入作为子命令或子Shell的输入，直到遇到EOF为止，再返回到主调Shell
 
+#stty -F /dev/ttyUSB1 raw speed 921600 min 0 time 1 //设置串口的波特率和读取时间
 stty -F $DIR raw speed $SPEED min 0 time 10
 
 #while [ 1 -eq 1 ]
