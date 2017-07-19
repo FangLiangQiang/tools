@@ -1,0 +1,13 @@
+#! /bin/sh
+DIR="/dev/tty$1"          #/dev/ttyUSB0 哪一个串口
+SPEED=$2        #设置串口波特率
+SearchStr=$3
+
+sudo -s <<EOF #将EOF与 << 结合使用，表示后续的输入作为子命令或子Shell的输入，直到遇到EOF为止，再返回到主调Shell
+
+stty -F $DIR raw speed $SPEED min 0 time 10
+
+#while [ 1 -eq 1 ]
+#do
+    cat $DIR | grep -iE "$SearchStr" --color
+#done

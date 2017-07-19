@@ -1,0 +1,18 @@
+#! /bin/sh
+
+SearchStr="$1"
+
+while true
+do
+    Status=`adb get-state`
+
+    if [ "$Status"x != "device"x ] 
+    then
+        echo -e "\033[31m==============wait-for-device==============\033[0m"
+        adb wait-for-device  
+    fi
+        adb root
+#        adb remount
+        echo -e "\033[44;31m==============start print==============\033[0m"
+        adb shell cat proc/kmsg | grep -iE "$SearchStr" --color
+done    
