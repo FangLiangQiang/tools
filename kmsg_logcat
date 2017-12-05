@@ -1,18 +1,90 @@
 #! /bin/sh
 
-SearchStr="$1"
+#************************************************************************************************************
+#软件版本：V1.1
+#作者：LitQ
+#修改日期：2017-12-05
+#内容：1.增加了搜索字符串的选项-s。
+#2.增加log保存选项-d
+#3.增加HAL log打印等级属性设置选项 -setprop
+#例子：kmsg_logcat -s "key:" -d ./log.txt：把输出的所有log保存到的当前路径的./log.txt下，设置搜索字符串为key:
+#kmsg_logcat -setprop 1:设置所有HAL的输出log等级为1
+#************************************************************************************************************
 
-while true
-do
-    Status=`adb get-state`
+msgattrlist=(Service Global Audio DVD BT Radio Video Key System Exdisplay XMRadio TPMS TV AC FA BackSeat BackOFF Ipod DVR OSD NV)
+searchstr="NULL"
+log_path="NULL"
+i=1
+val=0
 
-    if [ "$Status"x != "device"x ] 
-    then
-        echo -e "\033[31m==============wait-for-device==============\033[0m"
-        adb wait-for-device  
-    fi
-        adb root
-#        adb remount
-        echo -e "\033[44;31m==============start print==============\033[0m"
-        adb shell cat proc/kmsg | grep -iE "$SearchStr" --color
-done    
+function agrvproc()
+{
+	for args in $@
+	do
+		let i=i+1
+
+		if [ $args = "-s" ];then 
+			eval j=\$$i
+			searchstr="$j"
+		fi 
+
+		if [ $args = "-d" ];then 
+			eval j=\$$i
+			log_path="$j"
+		fi
+	
+		if [ $args = "-setprop" ];then 
+			eval val=\$$i
+			setdbglel
+			exit 0
+		fi
+	done
+}
+
+function setdbglel()
+{
+		for attr in ${msgattrlist[@]}
+		do 
+			echo "adb shell setprop fly.dbgMsg.$attr $val"
+	  	`adb shell setprop fly.dbgMsg.$attr $val`
+		done 
+}
+
+function getadbstatus()
+{
+		Status=`adb get-state`
+		if [ "$Status"x != "device"x ];then
+			echo "-wait-for-device-"
+			`adb wait-for-device`		
+		fi	
+}
+
+function msgproc()
+{
+	while true
+	do 
+	
+		getadbstatus
+
+		echo -e "\033[31m********************************Start Print*******************************\033[31m"
+
+		if [ $searchstr = "NULL" -a $log_path = "NULL" ];then 
+			echo -e "\033[47;32m==================================case 0==================================\033[0m"		
+			adb shell cat proc/kmsg
+		elif [ $searchstr != "NULL" -a $log_path = "NULL" ];then
+			echo -e "\033[47;33m==================================case 1==================================\033[0m"	
+			adb shell cat proc/kmsg | grep -iE "$searchstr" --color
+		elif [ $searchstr = "NULL" -a $log_path != "NULL" ];then
+			echo -e "\033[47;34m==================================case 2==================================\033[0m"	
+			adb shell cat proc/kmsg | tee $log_path
+		else
+			echo -e "\033[47;35m==================================case 3==================================\033[0m"	
+			adb shell cat proc/kmsg | tee $log_path | grep -iE "$searchstr" --color 
+		fi 
+
+	done
+}
+
+agrvproc $@
+msgproc
+   
