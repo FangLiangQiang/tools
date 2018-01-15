@@ -23,22 +23,38 @@ function agrvproc()
 	do
 		let i=i+1
 
-		if [ $args = "-s" ];then 
-			eval j=\$$i
+	  case $args in
+		"-s") 
+				num="-1"
+			;;
+		"-d")
+				num="-2"
+			;;
+		"-setprop")
+				num="-3"
+			;;
+		esac
+ 
+		eval j=\$"$i"
+
+		if [ x$args = x"-s" ];then 
 			searchstr="$j"
+		elif [ x$num = x"-1" ];then
+			searchstr+=" $j"
 		fi 
 
-		if [ $args = "-d" ];then 
-			eval j=\$$i
+		if [ x$num = x"-2" ];then 
 			log_path="$j"
 		fi
 	
-		if [ $args = "-setprop" ];then 
-			eval val=\$$i
+		if [ x$num = x"-3" ];then 
+			val=$j
 			setdbglel
 			exit 0
 		fi
 	done
+
+		echo "searchstr=$searchstr"
 }
 
 function setdbglel()
@@ -68,13 +84,13 @@ function msgproc()
 
 		echo -e "\033[31m********************************Start Print*******************************\033[31m"
 
-		if [ $searchstr = "NULL" -a $log_path = "NULL" ];then 
+		if [ "$searchstr" = "NULL" -a $log_path = "NULL" ];then 
 			echo -e "\033[47;32m==================================case 0==================================\033[0m"		
 			adb shell cat proc/kmsg
-		elif [ $searchstr != "NULL" -a $log_path = "NULL" ];then
+		elif [ "$searchstr" != "NULL" -a $log_path = "NULL" ];then
 			echo -e "\033[47;33m==================================case 1==================================\033[0m"	
 			adb shell cat proc/kmsg | grep -iE "$searchstr" --color
-		elif [ $searchstr = "NULL" -a $log_path != "NULL" ];then
+		elif [ "$searchstr" = "NULL" -a $log_path != "NULL" ];then
 			echo -e "\033[47;34m==================================case 2==================================\033[0m"	
 			adb shell cat proc/kmsg | tee $log_path
 		else
@@ -84,6 +100,7 @@ function msgproc()
 
 	done
 }
+
 
 agrvproc $@
 msgproc
